@@ -1,0 +1,13 @@
+{
+  "id": "precise-build-snapping",
+  "kind": "native",
+  "version": "0.1.0",
+  "backlog": "I14",
+  "display_name": "Precision Build Snapping",
+  "gameplay": true,
+  "feature_dependencies": [],
+  "play_help": [
+    "F9 toggles snapping; enabled snapping reaches 30 cm for belts and machines.",
+    "Implementation candidate; gameplay and co-op testing deferred."
+  ]
+}
