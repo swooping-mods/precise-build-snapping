@@ -1,5 +1,7 @@
 # Precision Build Snapping
 
+<img src="media/icon.png" alt="Precision Build Snapping icon" width="128" height="128">
+
 F9 toggles snapping; enabled snapping reaches 30 cm for belts and machines.
 
 ## Install
