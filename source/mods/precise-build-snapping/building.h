@@ -22,11 +22,19 @@ static int baction(const char *name,int key){return moon_input_key_action(name,(
 static int bcharge(int cost){int ok=1;PTR id=call(bm.player,0,0,&ok);void *a[]={id};DRoot money=dhold(call(bm.wallet,dget(bm.world),a,&ok));if(!money)return 0;void *c[]={unbox(dget(money))};PTR amount=call(bm.decimal_number,0,c,&ok);int enough=amount&&*(int *)unbox(amount)>=cost;ddrop(&money);if(!ok||!enough)return 0;int minus=-cost;unsigned char value[16]={0};void *ctor[]={&minus};call(bm.decimal_int,value,ctor,&ok);void *debit[]={id,value};if(ok)call(bm.charge,dget(bm.world),debit,&ok);return ok;}
 static int bframe(Context *context){
     if(bm.disabled)return 0;if(!bm.thread)bm.thread=GetCurrentThreadId();if(bm.thread!=GetCurrentThreadId())return 0;
-    int ok=1,frame=integer(bm.frame,0,&ok);if(!ok||frame==bm.last_frame)return 0;bm.last_frame=frame;
+    int ok=1,frame=integer(bm.frame,0,&ok);
+    if(!ok){bm.host_ready=0;bm.eligible=0;return 0;}
+    if(frame==bm.last_frame)return 0;bm.last_frame=frame;
     PTR walker=(PTR)context->rcx,world=0;field_value(walker,bm.world_field,&world);
-    if(world!=dget(bm.world)||walker!=dget(bm.walker)){ddrop(&bm.world);ddrop(&bm.walker);bm.world=dhold(world);bm.walker=dhold(walker);bm.eligible=0;return -1;}
+    if(world!=dget(bm.world)||walker!=dget(bm.walker)){
+        /* A replacement has no authority until its own next successful frame. */
+        bm.eligible=0;bm.host_ready=0;
+        ddrop(&bm.world);ddrop(&bm.walker);bm.world=dhold(world);bm.walker=dhold(walker);
+        if((world&&!bm.world)||(walker&&!bm.walker)){bm.disabled=1;bevent("snap-owner-root-failed");}
+        return -1;
+    }
     DWORD pid=0;PTR window=bm.foreground();if(window)bm.pid(window,&pid);
-    bm.host_ready=world&&!boolean(bm.restoring,world,&ok)&&bhost();
+    bm.host_ready=world&&!boolean(bm.restoring,world,&ok)&&ok&&bhost();
     bm.eligible=bm.host_ready&&pid==GetCurrentProcessId()&&boolean(bm.focused,0,&ok)&&!boolean(bm.typing,0,&ok)&&!boolean(bm.blocked,walker,&ok)&&boolean(bm.first,walker,&ok)&&ok;
     return 1;
 }
